@@ -49,6 +49,7 @@ class SamAutomaticMaskGenerator:
         point_grids: Optional[List[np.ndarray]] = None,
         min_mask_region_area: int = 0,
         output_mode: str = "binary_mask",
+        dtype: torch.dtype = torch.float32,
     ) -> None:
         """
         Using a SAM model, generates masks for the entire image.
@@ -120,7 +121,7 @@ class SamAutomaticMaskGenerator:
         if min_mask_region_area > 0:
             import cv2  # type: ignore # noqa: F401
 
-        self.predictor = SamPredictor(model)
+        self.predictor = SamPredictor(model, dtype=dtype)
         self.points_per_batch = points_per_batch
         self.pred_iou_thresh = pred_iou_thresh
         self.stability_score_thresh = stability_score_thresh

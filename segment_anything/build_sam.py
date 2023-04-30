@@ -11,13 +11,14 @@ from functools import partial
 from .modeling import ImageEncoderViT, MaskDecoder, PromptEncoder, Sam, TwoWayTransformer
 
 
-def build_sam_vit_h(checkpoint=None):
+def build_sam_vit_h(checkpoint=None, dtype=torch.float32):
     return _build_sam(
         encoder_embed_dim=1280,
         encoder_depth=32,
         encoder_num_heads=16,
         encoder_global_attn_indexes=[7, 15, 23, 31],
         checkpoint=checkpoint,
+        dtype=dtype
     )
 
 
@@ -58,6 +59,7 @@ def _build_sam(
     encoder_num_heads,
     encoder_global_attn_indexes,
     checkpoint=None,
+    dtype=torch.float32,
 ):
     prompt_embed_dim = 256
     image_size = 1024
@@ -83,6 +85,7 @@ def _build_sam(
             image_embedding_size=(image_embedding_size, image_embedding_size),
             input_image_size=(image_size, image_size),
             mask_in_chans=16,
+            dtype=dtype
         ),
         mask_decoder=MaskDecoder(
             num_multimask_outputs=3,

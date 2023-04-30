@@ -21,6 +21,7 @@ class PromptEncoder(nn.Module):
         input_image_size: Tuple[int, int],
         mask_in_chans: int,
         activation: Type[nn.Module] = nn.GELU,
+        dtype: torch.dtype = torch.float32,
     ) -> None:
         """
         Encodes prompts for input to SAM's mask decoder.
@@ -40,7 +41,7 @@ class PromptEncoder(nn.Module):
         self.embed_dim = embed_dim
         self.input_image_size = input_image_size
         self.image_embedding_size = image_embedding_size
-        self.pe_layer = PositionEmbeddingRandom(embed_dim // 2)
+        self.pe_layer = PositionEmbeddingRandom(embed_dim // 2, dtype=dtype)
 
         self.num_point_embeddings: int = 4  # pos/neg point + 2 box corners
         point_embeddings = [nn.Embedding(1, embed_dim) for i in range(self.num_point_embeddings)]
@@ -173,8 +174,9 @@ class PositionEmbeddingRandom(nn.Module):
     Positional encoding using random spatial frequencies.
     """
 
-    def __init__(self, num_pos_feats: int = 64, scale: Optional[float] = None) -> None:
+    def __init__(self, num_pos_feats: int = 64, scale: Optional[float] = None, dtype: torch.dtype = torch.float32) -> None:
         super().__init__()
+        self.dtype=dtype
         if scale is None or scale <= 0.0:
             scale = 1.0
         self.register_buffer(
@@ -186,6 +188,7 @@ class PositionEmbeddingRandom(nn.Module):
         """Positionally encode points that are normalized to [0,1]."""
         # assuming coords are in [0, 1]^2 square and have d_1 x ... x d_n x 2 shape
         coords = 2 * coords - 1
+        coords = coords.to(self.dtype)
         coords = coords @ self.positional_encoding_gaussian_matrix
         coords = 2 * np.pi * coords
         # outputs d_1 x ... x d_n x C shape

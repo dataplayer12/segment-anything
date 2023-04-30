@@ -18,6 +18,7 @@ class SamPredictor:
     def __init__(
         self,
         sam_model: Sam,
+        dtype: torch.dtype = torch.float32
     ) -> None:
         """
         Uses SAM to calculate the image embedding for an image, and then
@@ -28,6 +29,7 @@ class SamPredictor:
         """
         super().__init__()
         self.model = sam_model
+        self.dtype=dtype
         self.transform = ResizeLongestSide(sam_model.image_encoder.img_size)
         self.reset_image()
 
@@ -224,6 +226,7 @@ class SamPredictor:
             boxes=boxes,
             masks=mask_input,
         )
+        sparse_embeddings = sparse_embeddings.to(self.dtype)
 
         # Predict masks
         low_res_masks, iou_predictions = self.model.mask_decoder(
